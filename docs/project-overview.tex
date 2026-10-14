@@ -1,0 +1,56 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[margin=1.7cm]{geometry}
+\usepackage{enumitem}\usepackage{titlesec}\usepackage[hidelinks]{hyperref}\usepackage{parskip}
+\titleformat{\section}{\normalfont\large\bfseries}{\thesection}{0.6em}{}
+\titlespacing*{\section}{0pt}{6pt}{2pt}
+\setlist[itemize]{topsep=2pt,itemsep=1pt,parsep=0pt,leftmargin=1.3em}
+\pagestyle{empty}
+\begin{document}
+\begin{center}
+{\Large\bfseries IMU-Based Camera Stabilisation: Tilt and Pan Control}\\[2pt]
+{\large Lab 2 \textendash{} open-loop control with a BNO055 IMU and two servos}\\[4pt]
+{\small Embedded Real-Time Control laboratory \textendash{} M.Sc. Control Systems Engineering, University of Padova}\\
+{\small Author: Kiavash Rabbani Soudabi (ID 2141822) \textendash{} Course held by Prof.\ Alberto Morato \textendash{} 2025}
+\end{center}
+
+\section*{Purpose}
+Implement open-loop control on the T-Bot: use an inertial measurement unit to stabilise the tilt of a camera mount
+and to drive its pan axis, then improve the behaviour with two bonus tasks. The IMU is a BNO055 read over
+I\textsuperscript{2}C; the two axes are actuated with PWM servos.
+
+\section*{What I implemented}
+\begin{itemize}
+  \item \textbf{Exercise 1 -- tilt stabilisation from the accelerometer:} the tilt angle is estimated from the
+        measured Y acceleration, $\theta=\arcsin(a_y/g)$ converted to degrees, and the camera command is the negative
+        of that angle, clamped to $\pm45^\circ$.
+  \item \textbf{Bonus 1 -- smooth pan control from the gyroscope:} the pan command is a pure proportional law on the
+        Z-axis angular rate, $u_{pan}=-k_p\,\omega_z$ with $k_p=30$ (the value I tuned during the lab), also clamped
+        to $\pm45^\circ$.
+  \item \textbf{Actuator mapping:} each angle is mapped to the servo duty as $150+\theta\cdot(50/45)$ counts and
+        passed through a \texttt{saturate()} function that enforces the servo limits, so the mechanical range is
+        never exceeded.
+  \item \textbf{Telemetry:} I restructured the datalogger record to carry the interesting signals
+        (\texttt{tilt\_angle}, \texttt{y\_accelerate}, \texttt{pan\_control}, \texttt{z\_gyro}) and fixed the order of
+        the logger update/send calls so that the transmitted packets are complete; data was acquired with the MATLAB
+        serial/WiFi datalogger for analysis.
+  \item \textbf{Bonus 2 -- sensor fusion:} combining accelerometer and gyroscope information for a more stable
+        tilt/pan response.
+\end{itemize}
+
+\section*{Results}
+The measured step responses for the exercise and for both bonuses are included as figures in the report: the tilt
+loop holds the camera level for moderate platform inclination, and the gyro-based pan follows the rotation rate far
+more smoothly than the accelerometer-only solution. The report documents the control laws, the clamping strategy and
+the measurement results.
+
+\section*{Repository contents}
+\texttt{report/Embedded-Report-lab2.pdf} (submitted report, LaTeX source and figures included) $\cdot$
+\texttt{src/user\_code\_main.c} (USER CODE sections of my \texttt{main.c}; course framework not redistributed) $\cdot$
+\texttt{docs/} (this overview).
+
+\section*{Skills demonstrated}
+IMU integration over I\textsuperscript{2}C (BNO055), inclinometer estimation, proportional control design and gain
+tuning, accelerometer/gyroscope sensor fusion, PWM servo actuation and saturation handling, fixed-rate real-time
+loops, measurement and analysis with MATLAB.
+
+\end{document}
